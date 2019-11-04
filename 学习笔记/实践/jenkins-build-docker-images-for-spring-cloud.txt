@@ -1,0 +1,52 @@
+
+
+1. check Ubuntu version:
+uname -a
+lsb_release -a
+cat /etc/issue
+
+2. install jenkins on Ubuntu (Ubuntu 18.04.2 LTS)
+https://linuxize.com/post/how-to-install-jenkins-on-ubuntu-18-04/
+1) install java
+sudo apt update
+sudo apt install openjdk-8-jdk
+
+2) 
+wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+
+3)
+sudo apt update
+sudo apt install jenkins
+systemctl status jenkins
+
+
+3. configure jenkins:
+http://callmedadaxin.github.io/2018/07/20/jenkins-github-hook/
+
+4. install maven
+https://linuxize.com/post/how-to-install-apache-maven-on-ubuntu-18-04/
+
+5. set DOCKER_HOST in jenkins script
+
+enable docker remote API
+
+6. set pom.xml
+
+7. mvn clean package
+
+8. check docker images
+
+Push to Dockerhub
+7. create repository on dockerhub
+longyonggang/config-server
+
+8. set settings.xml
+	<server>
+		<id>docker.io</id>
+		<username>longyonggang</username>
+		<password>long862906</password>
+	</server>
+	
+mvn dockerfile:push -Ddockerfile.username=longyonggang -Ddockerfile.password=long862906
+
