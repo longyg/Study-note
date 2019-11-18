@@ -1,0 +1,105 @@
+System: Ubuntu 18.04 LTS
+
+------------------------------------------------------------------
+
+1. prepare
+sudo su
+ 
+apt-get update
+ 
+swapoff -a
+
+sudo apt-get install openssh-server
+
+apt-get update && apt-get install -y apt-transport-https curl
+
+------------------------------------------------------------------
+
+2. Install docker
+$ sudo su
+ 
+$ apt-get update
+ 
+$ apt-get install -y docker.io
+
+------------------------------------------------------------------
+
+3. Install kubeadm, kubelet, kubectl
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+EOF
+
+apt-get update && apt-get install -y kubelet kubeadm kubectl
+
+------------------------------------------------------------------
+
+4. Install kubernetes cluster
+
+
+1) Set docker to systemd mode
+docker info -f {{.CgroupDriver}}
+cgroupfs
+
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"]
+}
+EOF
+
+systemctl daemon-reload
+
+systemctl restart docker
+
+docker info -f {{.CgroupDriver}}
+systemd
+
+
+2) Initialize master
+ 
+kubeadm init --node-name=master --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12 --apiserver-advertise-address=0.0.0.0 --ignore-preflight-errors=Swap --control-plane-endpoint=10.131.98.87
+
+				You can now join any number of control-plane nodes by copying certificate authorities 
+				and service account keys on each node and then running the following as root:
+
+				  kubeadm join 10.131.98.87:6443 --token zduekf.v5wpsdx3k2dsce64 \
+					--discovery-token-ca-cert-hash sha256:8151f1a0b79bd9034494cbc70c09277e9bcbd4dd155514d5ae74fd41f0411931 \
+					--control-plane 	  
+
+				Then you can join any number of worker nodes by running the following on each as root:
+
+				kubeadm join 10.131.98.87:6443 --ignore-preflight-errors=Swap --token zduekf.v5wpsdx3k2dsce64 \
+					--discovery-token-ca-cert-hash sha256:8151f1a0b79bd9034494cbc70c09277e9bcbd4dd155514d5ae74fd41f0411931
+
+
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+
+kubeadm token list
+kubeadm token create
+openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+
+3) Join node to cluster
+kubeadm join 10.131.98.87:6443 --node-name=node01 --ignore-preflight-errors=Swap --token uuagis.moykkimqf9oa2b8g \
+    --discovery-token-ca-cert-hash sha256:e9bb343ba7552e42dec6f2b4cb621f37a0ed864dfa82d9d5d3dfa9c7a15807c0
+	
+------------------------------------------------------------------
+
+Troubleshoot:
+kubectl logs --namespace kube-system kube-flannel-ds-amd64-5fx2p
+kubectl describe pod -n kube-system kube-flannel-ds-amd64-xk78c
+
+
+Delete node:
+kubectl drain node01 --delete-local-data --force --ignore-daemonsets
+kubectl delete node node01
+
+on node01
+kubeadm reset

@@ -45,8 +45,8 @@ longyonggang/config-server
 	<server>
 		<id>docker.io</id>
 		<username>longyonggang</username>
-		<password>long862906</password>
+		<password>xxxx</password>
 	</server>
 	
-mvn dockerfile:push -Ddockerfile.username=longyonggang -Ddockerfile.password=long862906
+mvn dockerfile:push -Ddockerfile.username=longyonggang -Ddockerfile.password=xxxx
 
